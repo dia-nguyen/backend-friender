@@ -179,12 +179,16 @@ def edit_profile(id):
                 db.session.commit()
             except:
                 db.session.rollback()
+                return jsonify(errors='Error committing changes'), 500
+
+            db.session.close()
 
             return jsonify(user=user.serialize())
         else:
             return jsonify(errors=form.errors), 400
     else:
         return jsonify(errors='You cannot edit other profiles'), 401
+
 
 @app.get('/users/<int:id>')
 @jwt_required()
@@ -209,6 +213,7 @@ def like(like_id):
         db.session.commit()
     except:
         db.session.rollback()
+        return jsonify(errors='Error committing changes'), 500
 
     if g.user in liked_user.liking:
         return jsonify(message="match")
@@ -225,6 +230,7 @@ def dislike(dislike_id):
         db.session.commit()
     except:
         db.session.rollback()
+        return jsonify(errors='Error committing changes'), 500
 
     return jsonify(message="disliked")
 
@@ -254,6 +260,8 @@ def upload():
                 db.session.commit()
             except:
                 db.session.rollback()
+                return jsonify(errors='Error committing changes'), 500
+
             return jsonify(imageUrl=image_url)
     else:
         return jsonify(errors=form.errors), 400
