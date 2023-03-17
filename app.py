@@ -41,8 +41,6 @@ app = Flask(__name__)
 
 CORS(app)
 
-# Get DB_URI from environ variable (useful for production/testing) or,
-# if not set there, use development local db.
 app.config['SQLALCHEMY_DATABASE_URI'] = (
     os.environ['DATABASE_URL'].replace("postgres://", "postgresql://"))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -68,7 +66,6 @@ def add_user_to_g():
         g.user = None
 
 
-# TODO: Get location
 @app.post('/login')
 def login():
     '''Handle user login and return token on success'''
@@ -178,7 +175,10 @@ def edit_profile(id):
             user.bio = form.data.get('bio')
 
             db.session.add(user)
-            db.session.commit()
+            try:
+                db.session.commit()
+            except:
+                db.session.rollback()
 
             return jsonify(user=user.serialize())
         else:
@@ -205,22 +205,26 @@ def like(like_id):
     '''Likes a user'''
     liked_user = User.query.get_or_404(like_id)
     g.user.liking.append(liked_user)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
 
     if g.user in liked_user.liking:
         return jsonify(message="match")
 
     return jsonify(message="liked")
 
-#users/id/like
-#users/id/like/like_id
 @app.post('/users/dislike/<int:dislike_id>')
 @jwt_required()
 def dislike(dislike_id):
     '''Dislikes a user'''
     disliked_user = User.query.get_or_404(dislike_id)
     g.user.disliking.append(disliked_user)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
 
     return jsonify(message="disliked")
 
@@ -230,10 +234,8 @@ def dislike(dislike_id):
 def upload():
     '''Upload image to s3'''
     form = UploadImageForm()
-    print(form)
     if form.validate_on_submit():
         img = request.files.get('file', None)
-        print(img)
         if img:
             filename_raw = secure_filename(img.filename)
             _, file_extension = os.path.splitext(filename_raw)
@@ -248,24 +250,10 @@ def upload():
             image_url = f'{BASE_AWS_URL}/{filename}'
             g.user.image_url = image_url
 
-            db.session.commit()
+            try:
+                db.session.commit()
+            except:
+                db.session.rollback()
             return jsonify(imageUrl=image_url)
     else:
         return jsonify(errors=form.errors), 400
-
-
-# @app.post('/users/')
-# @jwt_required()
-# def user_profile():
-#     """Gets all user information associated with user id"""
-
-
-
-
-
-# Get next available user
-# Get curr_user profile
-# login
-# signup
-# update user
-# get all matches
