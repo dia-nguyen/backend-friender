@@ -54,8 +54,6 @@ jwt = JWTManager(app)
 
 connect_db(app)
 
-db.create_all()
-
 @app.before_request
 @jwt_required(optional=True)
 def add_user_to_g():
