@@ -103,8 +103,11 @@ def signup():
             return jsonify(token=access_token), 201
 
         except IntegrityError:
+            db.session.rollback()
             return jsonify(errors='Email already taken'), 400
-
+        except Exception as e:
+            db.session.rollback()
+            return jsonify(errors=str(e)), 500
     else:
         return jsonify(errors=form.errors), 400
 
