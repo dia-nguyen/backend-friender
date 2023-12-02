@@ -69,7 +69,6 @@ def login():
     '''Handle user login and return token on success'''
     data = request.get_json()
     form = LoginForm(data=data)
-    print(data)
     if form.validate_on_submit():
         email = form.data["email"]
         password = form.data["password"]
@@ -178,8 +177,6 @@ def edit_profile(id):
             except:
                 db.session.rollback()
                 return jsonify(errors='Error committing changes'), 500
-
-            db.session.close()
 
             return jsonify(user=user.serialize())
         else:
